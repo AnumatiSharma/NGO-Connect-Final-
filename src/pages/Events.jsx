@@ -1,11 +1,9 @@
-
 import { useEffect, useState } from "react";
 import {
   getEvents,
   registerForEvent,
   getMyRegistrations,
 } from "../services/api";
-
 import { useAuth } from "../context/AuthContext";
 
 function Events() {
@@ -26,14 +24,9 @@ function Events() {
         const eventsData = await getEvents();
         setEvents(eventsData.events || []);
 
-    
         if (user?.role === "volunteer" && token) {
-          const registrationsData =
-            await getMyRegistrations(token);
-
-          setRegistrations(
-            registrationsData.registrations || []
-          );
+          const data = await getMyRegistrations(token);
+          setRegistrations(data.registrations || []);
         }
       } catch (err) {
         setError(err.message);
@@ -45,11 +38,10 @@ function Events() {
     loadEvents();
   }, [user, token]);
 
-  const getRegistrationForEvent = (eventId) => {
+  const getRegistration = (eventId) => {
     return registrations.find(
-      (registration) =>
-        registration.event?._id === eventId ||
-        registration.event === eventId
+      (item) =>
+        item.event?._id === eventId || item.event === eventId
     );
   };
 
@@ -62,18 +54,10 @@ function Events() {
     try {
       setRegisteringId(eventId);
       setError("");
-
       const data = await registerForEvent(eventId, token);
-
       alert(data.message || "Registration successful");
-
-      // Reload registrations after registering
-      const registrationsData =
-        await getMyRegistrations(token);
-
-      setRegistrations(
-        registrationsData.registrations || []
-      );
+      const registrationsData = await getMyRegistrations(token);
+      setRegistrations(registrationsData.registrations || []);
     } catch (err) {
       alert(err.message);
     } finally {
@@ -81,263 +65,123 @@ function Events() {
     }
   };
 
-  const getButtonContent = (registration) => {
-    if (!registration) {
-      return "Register";
-    }
-
-    const status = registration.status?.toLowerCase();
-
-    if (status === "pending") {
-      return "Pending";
-    }
-
-    if (status === "approved") {
-      return "Approved";
-    }
-
-    if (status === "rejected") {
-      return "Register Again";
-    }
-
-    return "Register";
-  };
-
-  const getButtonClasses = (registration) => {
-    if (!registration) {
-      return "bg-emerald-700 text-white hover:bg-emerald-800";
-    }
-
-    const status = registration.status?.toLowerCase();
-
-    if (status === "pending") {
-      return "cursor-not-allowed bg-amber-100 text-amber-700";
-    }
-
-    if (status === "approved") {
-      return "cursor-not-allowed bg-emerald-100 text-emerald-700";
-    }
-
-    if (status === "rejected") {
-      return "bg-slate-800 text-white hover:bg-slate-900";
-    }
-
-    return "bg-emerald-700 text-white hover:bg-emerald-800";
-  };
-
-  if (loading) {
+  if (loading){
     return (
-      <div className="min-h-screen bg-[#f4faf7] px-6 py-12">
-        <div className="mx-auto max-w-7xl">
-          <p className="text-sm font-semibold uppercase tracking-wider text-emerald-700">
-            Volunteer Opportunities
-          </p>
-
-          <h1 className="mt-2 text-4xl font-bold text-emerald-950">
-            Events
-          </h1>
-
-          <p className="mt-4 text-slate-500">
-            Loading available events...
+      <main className="min-h-screen bg-gray-50 px-6 py-12">
+        <div className="mx-auto max-w-6xl">
+          <h1 className="text-3xl font-bold">Events</h1>
+          <p className="mt-3 text-gray-500">
+            Loading events...
           </p>
         </div>
-      </div>
+      </main>
     );
   }
 
-  if (error) {
+  if (error){
     return (
-      <div className="min-h-screen bg-[#f4faf7] px-6 py-12">
-        <div className="mx-auto max-w-7xl">
-          <p className="text-sm font-semibold uppercase tracking-wider text-emerald-700">
-            Volunteer Opportunities
-          </p>
-
-          <h1 className="mt-2 text-4xl font-bold text-emerald-950">
-            Events
-          </h1>
-
-          <div className="mt-6 rounded-2xl border border-red-200 bg-red-50 p-5">
-            <p className="font-medium text-red-700">
-              {error}
-            </p>
+      <main className="min-h-screen bg-gray-50 px-6 py-12">
+        <div className="mx-auto max-w-6xl">
+          <h1 className="text-3xl font-bold">Events</h1>
+          <div className="mt-6 rounded-lg bg-red-50 p-4 text-red-600">
+            {error}
           </div>
         </div>
-      </div>
+      </main>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#f4faf7] px-6 py-12">
-      <div className="mx-auto max-w-7xl">
-
-        {/* Header */}
-        <div className="mb-10">
-          <p className="text-sm font-semibold uppercase tracking-wider text-emerald-700">
+    <main className="min-h-screen bg-gray-50 px-6 py-12">
+      <div className="mx-auto max-w-6xl">
+        <div className="mb-8">
+          <p className="text-sm font-medium text-emerald-700">
             Volunteer Opportunities
           </p>
 
-          <h1 className="mt-2 text-4xl font-bold tracking-tight text-emerald-950">
-            Find an opportunity
-          </h1>
-
-          <p className="mt-3 max-w-2xl text-lg text-slate-600">
-            Discover events where you can contribute your
-            time, skills, and energy to your community.
-          </p>
+          <h1 className="mt-2 text-3xl font-bold text-gray-900">Find an Event</h1>
+          <p className="mt-2 text-gray-600">Find volunteering opportunities and register for events.</p>
         </div>
 
-        {/* No events */}
-        {events.length === 0 ? (
-          <div className="rounded-3xl border border-emerald-900/10 bg-white p-12 text-center shadow-[0_10px_40px_rgba(6,45,36,0.06)]">
-            <h2 className="text-2xl font-bold text-emerald-950">
+        {events.length === 0 ?(
+          <div className="rounded-xl bg-white p-8 text-center shadow-sm">
+            <h2 className="text-xl font-semibold">
               No events available
             </h2>
 
-            <p className="mt-3 text-slate-500">
-              There are no published volunteering events
-              available right now.
+            <p className="mt-2 text-gray-500">
+              There are no published events right now.
             </p>
           </div>
         ) : (
-
-          /* Event cards */
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-
             {events.map((event) => {
-              const registration =
-                getRegistrationForEvent(event._id);
-
-              const status =
-                registration?.status?.toLowerCase();
-
-              const buttonDisabled =
+              const registration = getRegistration(event._id);
+              const status = registration?.status?.toLowerCase();
+              const isDisabled =
                 registeringId === event._id ||
                 status === "pending" ||
                 status === "approved";
+              let buttonText = "Register";
+
+              if (registeringId === event._id) {
+                buttonText = "Registering...";
+              } else if (status === "pending") {
+                buttonText = "Pending";
+              } else if (status === "approved") {
+                buttonText = "Approved";
+              } else if (status === "rejected") {
+                buttonText = "Register Again";
+              }
 
               return (
-                <div
-                  key={event._id}
-                  className="group overflow-hidden rounded-3xl border border-emerald-900/10 bg-white shadow-[0_10px_40px_rgba(6,45,36,0.06)] transition duration-200 hover:-translate-y-1 hover:shadow-[0_18px_50px_rgba(6,45,36,0.10)]"
-                >
+                <div key={event._id} className="rounded-xl bg-white p-6 shadow-sm">
+                  <div>
+                    <span className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-medium text-emerald-700">
+                      {event.category}
+                    </span>
+                    <h2 className="mt-4 text-xl font-bold text-gray-900"> {event.title} </h2>
+                    <p className="mt-2 text-sm text-gray-600"> {event.description}</p>
+                  </div>
 
-                  {/* Card header */}
-                  <div className="bg-gradient-to-br from-emerald-50 via-white to-white p-6">
-
-                    <div className="flex items-start justify-between gap-4">
-
-                      <span className="rounded-full bg-emerald-100 px-3 py-1.5 text-xs font-semibold capitalize text-emerald-700">
-                        {event.category}
-                      </span>
-
-                      {registration && (
-                        <span
-                          className={`rounded-full px-3 py-1.5 text-xs font-semibold capitalize ${
-                            status === "approved"
-                              ? "bg-emerald-100 text-emerald-700"
-                              : status === "rejected"
-                              ? "bg-red-100 text-red-700"
-                              : "bg-amber-100 text-amber-700"
-                          }`}
-                        >
-                          {registration.status}
-                        </span>
-                      )}
-
-                    </div>
-
-                    <h2 className="mt-5 text-xl font-bold text-emerald-950">
-                      {event.title}
-                    </h2>
-
-                    <p className="mt-3 line-clamp-3 text-sm leading-6 text-slate-600">
-                      {event.description}
+              
+                  <div className="mt-5 space-y-2 text-sm text-gray-600">
+                    <p>
+                      📅{" "}
+                      {event.date ? new Date(event.date).toLocaleDateString() : "Date unavailable"}
                     </p>
 
+                    <p> 📍 {event.location}</p>
+
+                    <p>👥 {event.capacity} volunteer slots </p>
                   </div>
 
+                  {registration && (
+                    <p className="mt-4 text-sm">
+                      Status:{" "}
+                      <span className="font-semibold capitalize">
+                        {registration.status}
+                      </span>
+                    </p>
+                  )}
 
-                  {/* Event information */}
-                  <div className="p-6">
-
-                    <div className="space-y-3">
-
-                      <div className="flex items-center gap-3">
-                        <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-slate-100">
-                          📅
-                        </span>
-
-                        <div>
-                          <p className="text-xs text-slate-400">
-                            Date
-                          </p>
-
-                          <p className="text-sm font-medium text-slate-700">
-                            {event.date
-                              ? new Date(
-                                  event.date
-                                ).toLocaleDateString()
-                              : "Date unavailable"}
-                          </p>
-                        </div>
-                      </div>
-
-
-                      <div className="flex items-center gap-3">
-                        <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-slate-100">
-                          📍
-                        </span>
-
-                        <div>
-                          <p className="text-xs text-slate-400">
-                            Location
-                          </p>
-
-                          <p className="text-sm font-medium text-slate-700">
-                            {event.location}
-                          </p>
-                        </div>
-                      </div>
-
-
-                      <div className="flex items-center gap-3">
-                        <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-slate-100">
-                          👥
-                        </span>
-
-                        <div>
-                          <p className="text-xs text-slate-400">
-                            Capacity
-                          </p>
-
-                          <p className="text-sm font-medium text-slate-700">
-                            {event.capacity} volunteer slots
-                          </p>
-                        </div>
-                      </div>
-
-                    </div>
-
-
-                    {/* Volunteer action */}
-                    {user?.role === "volunteer" && (
-                      <button
-                        onClick={() =>
-                          handleRegister(event._id)
-                        }
-                        disabled={buttonDisabled}
-                        className={`mt-7 w-full rounded-xl px-4 py-3 text-sm font-semibold transition ${getButtonClasses(
-                          registration
-                        )}`}
-                      >
-                        {registeringId === event._id
-                          ? "Registering..."
-                          : getButtonContent(registration)}
-                      </button>
-                    )}
-
-                  </div>
+                  {user?.role === "volunteer" && (
+                    <button
+                      onClick={() => handleRegister(event._id)}
+                      disabled={isDisabled}
+                      className={`mt-5 w-full rounded-lg px-4 py-2 font-medium ${
+                        status === "pending"
+                          ? "cursor-not-allowed bg-yellow-100 text-yellow-700"
+                          : status === "approved"
+                          ? "cursor-not-allowed bg-green-100 text-green-700"
+                          : status === "rejected"
+                          ? "bg-gray-800 text-white hover:bg-gray-900"
+                          : "bg-emerald-700 text-white hover:bg-emerald-800"
+                      }`}
+                    >
+                      {buttonText}
+                    </button>
+                  )}
 
                 </div>
               );
@@ -345,10 +189,8 @@ function Events() {
 
           </div>
         )}
-
       </div>
-    </div>
+    </main>
   );
 }
-
 export default Events;

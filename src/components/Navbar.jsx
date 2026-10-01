@@ -20,8 +20,6 @@ function Navbar() {
   return (
     <nav className="sticky top-0 z-50 border-b border-emerald-900/10 bg-white/95 backdrop-blur-md">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4 lg:px-8">
-
-        {/* Logo */}
         <Link to="/" className="flex items-center gap-3">
           <div className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-700 text-white shadow-sm">
             <svg
@@ -49,9 +47,10 @@ function Navbar() {
           </div>
         </Link>
 
-        {/* Main Navigation */}
+        
         <div className="hidden items-center gap-1 md:flex">
 
+  
           <Link
             to="/"
             className="rounded-full px-4 py-2 text-sm font-medium text-slate-600 transition-all duration-200 hover:bg-emerald-50 hover:text-emerald-800"
@@ -59,14 +58,16 @@ function Navbar() {
             Home
           </Link>
 
-          <Link
-            to="/events"
-            className="rounded-full px-4 py-2 text-sm font-medium text-slate-600 transition-all duration-200 hover:bg-emerald-50 hover:text-emerald-800"
-          >
-            Events
-          </Link>
+          {user?.role === "volunteer" && (
+            <Link
+              to="/events"
+              className="rounded-full px-4 py-2 text-sm font-medium text-slate-600 transition-all duration-200 hover:bg-emerald-50 hover:text-emerald-800"
+            >
+              Events
+            </Link>
+          )}
 
-          {/* Logged-in dashboard */}
+        
           {user && (
             <Link
               to={dashboardPath}
@@ -76,17 +77,27 @@ function Navbar() {
             </Link>
           )}
 
-          {/* Volunteer navigation */}
+          
           {user?.role === "volunteer" && (
-            <Link
-              to="/my-registrations"
-              className="rounded-full px-4 py-2 text-sm font-medium text-slate-600 transition-all duration-200 hover:bg-emerald-50 hover:text-emerald-800"
-            >
-              My Registrations
-            </Link>
+            <>
+              <Link
+                to="/my-registrations"
+                className="rounded-full px-4 py-2 text-sm font-medium text-slate-600 transition-all duration-200 hover:bg-emerald-50 hover:text-emerald-800"
+              >
+                My Registrations
+              </Link>
+
+  
+              <Link
+                to="/certificates"
+                className="rounded-full px-4 py-2 text-sm font-medium text-slate-600 transition-all duration-200 hover:bg-emerald-50 hover:text-emerald-800"
+              >
+                My Certificates
+              </Link>
+            </>
           )}
 
-          {/* Coordinator / Admin navigation */}
+    
           {isCoordinator && (
             <Link
               to="/coordinator/events"
@@ -96,7 +107,7 @@ function Navbar() {
             </Link>
           )}
 
-          {/* Profile */}
+
           {user && (
             <Link
               to="/profile"
@@ -108,12 +119,12 @@ function Navbar() {
 
         </div>
 
-        {/* Right Side */}
+    
         <div className="flex items-center gap-3">
 
           {user ? (
             <>
-              {/* User Information */}
+              
               <div className="hidden items-center gap-3 lg:flex">
 
                 <div className="flex h-9 w-9 items-center justify-center rounded-full bg-emerald-100 font-semibold text-emerald-800">
@@ -132,7 +143,7 @@ function Navbar() {
 
               </div>
 
-              {/* Logout */}
+          
               <button
                 onClick={handleLogout}
                 className="rounded-full bg-red-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:bg-red-700 hover:shadow-md"
@@ -142,7 +153,7 @@ function Navbar() {
             </>
           ) : (
             <>
-              {/* Login */}
+          
               <Link
                 to="/login"
                 className="hidden rounded-full px-4 py-2.5 text-sm font-medium text-slate-700 transition-all duration-200 hover:bg-emerald-50 hover:text-emerald-800 sm:block"
@@ -150,7 +161,7 @@ function Navbar() {
                 Log in
               </Link>
 
-              {/* Signup */}
+            
               <Link
                 to="/register"
                 className="rounded-full bg-emerald-700 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:bg-emerald-800 hover:shadow-md"

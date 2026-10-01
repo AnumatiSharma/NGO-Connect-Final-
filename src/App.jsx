@@ -1,11 +1,8 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-
 import ProtectedRoute from "./components/ProtectedRoute";
 import RoleProtectedRoute from "./components/RoleProtectedRoute";
-
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
-
 import Home from "./pages/Home";
 import About from "./pages/About";
 import NGOs from "./pages/NGOs";
@@ -13,10 +10,10 @@ import Events from "./pages/Events";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Profile from "./pages/Profile";
-
 import Dashboard from "./pages/Dashboard";
 import MyRegistrations from "./pages/MyRegistrations";
-
+import Certificates from "./pages/Certificates";
+import VerifyCertificate from "./pages/VerifyCertificate";
 import CoordinatorDashboard from "./pages/CoordinatorDashboard";
 import CoordinatorEvents from "./pages/CoordinatorEvents";
 import CreateEvent from "./pages/CreateEvent";
@@ -33,11 +30,13 @@ function App() {
 
             <Route path="/" element={<Home />} />
             <Route path="/about" element={<About />} />
-            <Route  path="/ngos" element={<NGOs />}  />
-            <Route  path="/events" element={<Events />} />
-             <Route path="/login" element={<Login />} />
+            <Route path="/ngos" element={<NGOs />} />
+            <Route path="/events" element={<Events />} />
+            <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
-             <Route  path="/dashboard"
+
+            <Route
+              path="/dashboard"
               element={
                 <ProtectedRoute>
                   <Dashboard />
@@ -55,6 +54,15 @@ function App() {
             />
 
             <Route
+              path="/certificates"
+              element={
+                <RoleProtectedRoute allowedRoles={["volunteer"]}>
+                  <Certificates />
+                </RoleProtectedRoute>
+              }
+            />
+
+            <Route
               path="/profile"
               element={
                 <ProtectedRoute>
@@ -62,9 +70,6 @@ function App() {
                 </ProtectedRoute>
               }
             />
-
-
-            
 
             <Route
               path="/coordinator/dashboard"
@@ -110,6 +115,10 @@ function App() {
               }
             />
 
+            <Route
+  path="/verify-certificate"
+  element={<VerifyCertificate />}
+/>
 
             <Route
               path="*"

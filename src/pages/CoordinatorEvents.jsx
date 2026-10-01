@@ -6,18 +6,17 @@ const API_URL = "http://localhost:5000/api";
 function CoordinatorEvents() {
   const { eventId } = useParams();
   const navigate = useNavigate();
+  const token = localStorage.getItem("token");
 
   const [events, setEvents] = useState([]);
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [registrations, setRegistrations] = useState([]);
-
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
 
-  const [formData, setFormData] = useState({
+  const [form, setForm] = useState({
     title: "",
     description: "",
     category: "",
@@ -26,14 +25,9 @@ function CoordinatorEvents() {
     capacity: "",
   });
 
-  const token = localStorage.getItem("token");
-
   useEffect(() => {
-    const loadEvents = async () => {
+    const getEvents = async () => {
       try {
-        setLoading(true);
-        setError("");
-
         const response = await fetch(`${API_URL}/events/my`, {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -43,37 +37,21 @@ function CoordinatorEvents() {
         const data = await response.json();
 
         if (!response.ok) {
-          throw new Error(
-            data.message || "Failed to load events"
-          );
+          throw new Error(data.message || "Failed to load events");
         }
 
         const myEvents = data.events || [];
-
         setEvents(myEvents);
+
         if (eventId) {
-          const event = myEvents.find(
-            (item) => item._id === eventId
-          );
+          const event = myEvents.find((item) => item._id === eventId);
 
-          if (event) {
-            setSelectedEvent(event);
-
-            setFormData({
-              title: event.title || "",
-              description: event.description || "",
-              category: event.category || "",
-              date: event.date
-                ? event.date.substring(0, 10)
-                : "",
-              location: event.location || "",
-              capacity: event.capacity || "",
-            });
-
-            loadRegistrations(event._id);
-          } else {
+          if (!event) {
             setError("Event not found.");
+            return;
           }
+
+          selectEvent(event);
         }
       } catch (err) {
         setError(err.message);
@@ -82,14 +60,26 @@ function CoordinatorEvents() {
       }
     };
 
-    loadEvents();
+    getEvents();
   }, [eventId]);
 
-  
-  const loadRegistrations = async (id) => {
-    try {
-      setRegistrations([]);
+  const selectEvent = async (event) => {
+    setSelectedEvent(event);
 
+    setForm({
+      title: event.title || "",
+      description: event.description || "",
+      category: event.category || "",
+      date: event.date ? event.date.substring(0, 10) : "",
+      location: event.location || "",
+      capacity: event.capacity || "",
+    });
+
+    await getRegistrations(event._id);
+  };
+
+  const getRegistrations = async (id) => {
+    try {
       const response = await fetch(
         `${API_URL}/registrations/event/${id}`,
         {
@@ -112,16 +102,11 @@ function CoordinatorEvents() {
       setError(err.message);
     }
   };
-  const viewRegistrations = async (event) => {
-    setSelectedEvent(event);
-    await loadRegistrations(event._id);
-  };
 
-  
-  const updateStatus = async (registrationId, status) => {
+  const updateStatus = async (id, status) => {
     try {
       const response = await fetch(
-        `${API_URL}/registrations/${registrationId}/status`,
+        `${API_URL}/registrations/${id}/status`,
         {
           method: "PATCH",
           headers: {
@@ -135,19 +120,12 @@ function CoordinatorEvents() {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(
-          data.message || "Failed to update status"
-        );
+        throw new Error(data.message || "Failed to update status");
       }
 
-      setRegistrations((current) =>
-        current.map((registration) =>
-          registration._id === registrationId
-            ? {
-                ...registration,
-                status,
-              }
-            : registration
+      setRegistrations((items) =>
+        items.map((item) =>
+          item._id === id ? { ...item, status } : item
         )
       );
     } catch (err) {
@@ -155,13 +133,73 @@ function CoordinatorEvents() {
     }
   };
 
-  
+  const markAttendance = async (id, attendance) => {
+    try {
+      const response = await fetch(
+        `${API_URL}/registrations/${id}/attendance`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ attendance }),
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          data.message || "Failed to mark attendance"
+        );
+      }
+
+      setRegistrations((items) =>
+        items.map((item) =>
+          item._id === id ? { ...item, attendance } : item
+        )
+      );
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+
+  const generateCertificate = async (id) => {
+    try {
+      const response = await fetch(
+        `${API_URL}/certificates/generate/${id}`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          data.message || "Failed to generate certificate"
+        );
+      }
+
+      alert(
+        `Certificate generated successfully!\n\nCertificate ID: ${data.certificate.certificateId}`
+      );
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+
   const handleChange = (e) => {
-    setFormData({
-      ...formData,
+    setForm({
+      ...form,
       [e.target.name]: e.target.value,
     });
-  }
+  };
+
   const updateEvent = async (e) => {
     e.preventDefault();
 
@@ -169,7 +207,6 @@ function CoordinatorEvents() {
 
     try {
       setSaving(true);
-      setError("");
 
       const response = await fetch(
         `${API_URL}/events/${selectedEvent._id}`,
@@ -180,12 +217,12 @@ function CoordinatorEvents() {
             Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify({
-            title: formData.title,
-            description: formData.description,
-            category: formData.category,
-            date: formData.date,
-            location: formData.location,
-            capacity: Number(formData.capacity),
+            title: form.title,
+            description: form.description,
+            category: form.category,
+            date: form.date,
+            location: form.location,
+            capacity: Number(form.capacity),
           }),
         }
       );
@@ -193,25 +230,18 @@ function CoordinatorEvents() {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(
-          data.message || "Failed to update event"
-        );
+        throw new Error(data.message || "Failed to update event");
       }
 
-      const updatedEvent = data.event;
+      setSelectedEvent(data.event);
 
-      setSelectedEvent(updatedEvent);
-
-      setEvents((current) =>
-        current.map((event) =>
-          event._id === updatedEvent._id
-            ? updatedEvent
-            : event
+      setEvents((items) =>
+        items.map((event) =>
+          event._id === data.event._id ? data.event : event
         )
       );
 
       setEditing(false);
-
       alert("Event updated successfully");
     } catch (err) {
       setError(err.message);
@@ -220,19 +250,16 @@ function CoordinatorEvents() {
     }
   };
 
-  
   const deleteEvent = async () => {
     if (!selectedEvent) return;
 
-   const confirmed = window.confirm(
-  `Are you sure you want to delete "${selectedEvent.title}"?\n\nThis action cannot be undone.`
-);
+    const confirmDelete = window.confirm(
+      `Are you sure you want to delete "${selectedEvent.title}"?`
+    );
 
-    if (!confirmed) return;
+    if (!confirmDelete) return;
 
     try {
-      setError("");
-
       const response = await fetch(
         `${API_URL}/events/${selectedEvent._id}`,
         {
@@ -246,13 +273,10 @@ function CoordinatorEvents() {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(
-          data.message || "Failed to delete event"
-        );
+        throw new Error(data.message || "Failed to delete event");
       }
 
       alert("Event deleted successfully");
-
       navigate("/coordinator/dashboard");
     } catch (err) {
       setError(err.message);
@@ -261,21 +285,20 @@ function CoordinatorEvents() {
 
   if (loading) {
     return (
-      <div className="mx-auto max-w-6xl px-4 py-12">
-        <p>Loading events...</p>
-      </div>
+      <main className="min-h-screen bg-gray-50 p-10 text-center">
+        Loading events...
+      </main>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 px-4 py-12">
+    <main className="min-h-screen bg-gray-50 px-4 py-12">
       <div className="mx-auto max-w-6xl">
 
-        {/* Header */}
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold">
-              Coordinator Event Management
+            <h1 className="text-3xl font-bold text-gray-900">
+              Event Management
             </h1>
 
             <p className="mt-2 text-gray-600">
@@ -284,68 +307,59 @@ function CoordinatorEvents() {
           </div>
 
           <button
-            onClick={() =>
-              navigate("/coordinator/dashboard")
-            }
+            onClick={() => navigate("/coordinator/dashboard")}
             className="rounded-lg border bg-white px-4 py-2 font-medium hover:bg-gray-100"
           >
             ← Dashboard
           </button>
         </div>
 
-      
         {error && (
           <div className="mt-6 rounded-lg bg-red-50 p-4 text-red-600">
             {error}
           </div>
         )}
 
-      
-        <div className="mt-8 grid gap-6 md:grid-cols-2">
-          {events.map((event) => (
-            <div
-              key={event._id}
-              className={`rounded-xl border bg-white p-6 shadow-sm ${
-                selectedEvent?._id === event._id
-                  ? "ring-2 ring-blue-500"
-                  : ""
-              }`}
-            >
-              <h2 className="text-xl font-semibold">
-                {event.title}
-              </h2>
-
-              <p className="mt-2 text-gray-600">
-                {event.description}
-              </p>
-
-              <p className="mt-3 text-sm text-gray-500">
-                📍 {event.location}
-              </p>
-
-              <p className="mt-1 text-sm text-gray-500">
-                📅{" "}
-                {event.date
-                  ? new Date(event.date).toLocaleDateString()
-                  : "No date"}
-              </p>
-
-              <p className="mt-1 text-sm text-gray-500">
-                👥 Capacity: {event.capacity}
-              </p>
-
-              <button
-                onClick={() => viewRegistrations(event)}
-                className="mt-5 rounded-lg bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
+        {!eventId && (
+          <div className="mt-8 grid gap-6 md:grid-cols-2">
+            {events.map((event) => (
+              <div
+                key={event._id}
+                className="rounded-xl bg-white p-6 shadow-sm"
               >
-                View Registrations
-              </button>
-            </div>
-          ))}
-        </div>
+                <h2 className="text-xl font-semibold">
+                  {event.title}
+                </h2>
 
-     
-        {events.length === 0 && (
+                <p className="mt-2 text-gray-600">
+                  {event.description}
+                </p>
+
+                <div className="mt-4 space-y-1 text-sm text-gray-500">
+                  <p>📍 {event.location}</p>
+                  <p>
+                    📅{" "}
+                    {event.date
+                      ? new Date(event.date).toLocaleDateString()
+                      : "No date"}
+                  </p>
+                  <p>👥 Capacity: {event.capacity}</p>
+                </div>
+
+                <button
+                  onClick={() =>
+                    navigate(`/coordinator/events/${event._id}`)
+                  }
+                  className="mt-5 rounded-lg bg-emerald-700 px-4 py-2 text-white hover:bg-emerald-800"
+                >
+                  Manage Event
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {!eventId && events.length === 0 && (
           <div className="mt-8 rounded-xl bg-white p-8 text-center shadow-sm">
             <p className="text-gray-500">
               You have not created any events yet.
@@ -354,10 +368,9 @@ function CoordinatorEvents() {
         )}
 
         {selectedEvent && (
-          <div className="mt-10 rounded-xl border bg-white p-6 shadow-sm">
+          <section className="mt-10 rounded-xl bg-white p-6 shadow-sm">
 
             <div className="flex flex-wrap items-start justify-between gap-4">
-
               <div>
                 <h2 className="text-2xl font-bold">
                   {selectedEvent.title}
@@ -368,30 +381,27 @@ function CoordinatorEvents() {
                 </p>
               </div>
 
-              <div className="flex flex-wrap gap-3">
-
+              <div className="flex gap-3">
                 <button
                   onClick={() => setEditing(!editing)}
                   className="rounded-lg bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
                 >
-                  {editing ? "Cancel Edit" : "Edit Event"}
+                  {editing ? "Cancel" : "Edit Event"}
                 </button>
 
                 <button
                   onClick={deleteEvent}
                   className="rounded-lg bg-red-600 px-4 py-2 text-white hover:bg-red-700"
                 >
-                  Delete Event
+                  Delete
                 </button>
-
               </div>
             </div>
 
-        
             {editing && (
               <form
                 onSubmit={updateEvent}
-                className="mt-8 rounded-xl border bg-gray-50 p-6"
+                className="mt-8 rounded-xl bg-gray-50 p-6"
               >
                 <h3 className="text-xl font-semibold">
                   Edit Event
@@ -399,81 +409,36 @@ function CoordinatorEvents() {
 
                 <div className="mt-5 grid gap-4 md:grid-cols-2">
 
-                  <div>
-                    <label className="text-sm font-medium">
-                      Title
-                    </label>
+                  {[
+                    ["title", "Title", "text"],
+                    ["category", "Category", "text"],
+                    ["date", "Date", "date"],
+                    ["capacity", "Capacity", "number"],
+                    ["location", "Location", "text"],
+                  ].map(([name, label, type]) => (
+                    <div
+                      key={name}
+                      className={
+                        name === "location"
+                          ? "md:col-span-2"
+                          : ""
+                      }
+                    >
+                      <label className="text-sm font-medium">
+                        {label}
+                      </label>
 
-                    <input
-                      type="text"
-                      name="title"
-                      value={formData.title}
-                      onChange={handleChange}
-                      className="mt-1 w-full rounded-lg border px-3 py-2"
-                      required
-                    />
-                  </div>
-
-                  <div>
-                    <label className="text-sm font-medium">
-                      Category
-                    </label>
-
-                    <input
-                      type="text"
-                      name="category"
-                      value={formData.category}
-                      onChange={handleChange}
-                      className="mt-1 w-full rounded-lg border px-3 py-2"
-                      required
-                    />
-                  </div>
-
-                  <div>
-                    <label className="text-sm font-medium">
-                      Date
-                    </label>
-
-                    <input
-                      type="date"
-                      name="date"
-                      value={formData.date}
-                      onChange={handleChange}
-                      className="mt-1 w-full rounded-lg border px-3 py-2"
-                      required
-                    />
-                  </div>
-
-                  <div>
-                    <label className="text-sm font-medium">
-                      Capacity
-                    </label>
-
-                    <input
-                      type="number"
-                      name="capacity"
-                      value={formData.capacity}
-                      onChange={handleChange}
-                      className="mt-1 w-full rounded-lg border px-3 py-2"
-                      min="1"
-                      required
-                    />
-                  </div>
-
-                  <div className="md:col-span-2">
-                    <label className="text-sm font-medium">
-                      Location
-                    </label>
-
-                    <input
-                      type="text"
-                      name="location"
-                      value={formData.location}
-                      onChange={handleChange}
-                      className="mt-1 w-full rounded-lg border px-3 py-2"
-                      required
-                    />
-                  </div>
+                      <input
+                        type={type}
+                        name={name}
+                        value={form[name]}
+                        onChange={handleChange}
+                        min={name === "capacity" ? "1" : undefined}
+                        className="mt-1 w-full rounded-lg border px-3 py-2"
+                        required
+                      />
+                    </div>
+                  ))}
 
                   <div className="md:col-span-2">
                     <label className="text-sm font-medium">
@@ -482,7 +447,7 @@ function CoordinatorEvents() {
 
                     <textarea
                       name="description"
-                      value={formData.description}
+                      value={form.description}
                       onChange={handleChange}
                       rows="4"
                       className="mt-1 w-full rounded-lg border px-3 py-2"
@@ -495,27 +460,24 @@ function CoordinatorEvents() {
                 <button
                   type="submit"
                   disabled={saving}
-                  className="mt-6 rounded-lg bg-green-600 px-5 py-2 text-white disabled:opacity-50"
+                  className="mt-6 rounded-lg bg-emerald-700 px-5 py-2 text-white disabled:opacity-50"
                 >
                   {saving ? "Saving..." : "Save Changes"}
                 </button>
               </form>
             )}
 
-          
             <div className="mt-8">
-
               <h3 className="text-xl font-semibold">
                 Registered Volunteers
               </h3>
 
               {registrations.length === 0 ? (
-                <p className="mt-6 text-gray-500">
+                <p className="mt-5 text-gray-500">
                   No volunteers have registered yet.
                 </p>
               ) : (
-                <div className="mt-6 space-y-4">
-
+                <div className="mt-5 space-y-4">
                   {registrations.map((registration) => (
                     <div
                       key={registration._id}
@@ -541,7 +503,6 @@ function CoordinatorEvents() {
                       </p>
 
                       <div className="mt-4 flex gap-3">
-
                         <button
                           onClick={() =>
                             updateStatus(
@@ -549,7 +510,7 @@ function CoordinatorEvents() {
                               "approved"
                             )
                           }
-                          className="rounded-lg bg-green-600 px-4 py-2 text-white"
+                          className="rounded-lg bg-green-600 px-4 py-2 text-white hover:bg-green-700"
                         >
                           Approve
                         </button>
@@ -561,25 +522,85 @@ function CoordinatorEvents() {
                               "rejected"
                             )
                           }
-                          className="rounded-lg bg-red-600 px-4 py-2 text-white"
+                          className="rounded-lg bg-red-600 px-4 py-2 text-white hover:bg-red-700"
                         >
                           Reject
                         </button>
-
                       </div>
+
+                      {registration.status === "approved" && (
+                        <div className="mt-5 border-t pt-4">
+                          <p className="font-medium">
+                            Attendance
+                          </p>
+
+                          <p className="mt-1 text-sm text-gray-600">
+                            Current:{" "}
+                            {registration.attendance === "not_marked"
+                              ? "Not Marked"
+                              : registration.attendance}
+                          </p>
+
+                          <div className="mt-3 flex gap-3">
+                            <button
+                              onClick={() =>
+                                markAttendance(
+                                  registration._id,
+                                  "present"
+                                )
+                              }
+                              className="rounded-lg bg-green-600 px-4 py-2 text-white hover:bg-green-700"
+                            >
+                              ✓ Present
+                            </button>
+
+                            <button
+                              onClick={() =>
+                                markAttendance(
+                                  registration._id,
+                                  "absent"
+                                )
+                              }
+                              className="rounded-lg bg-red-600 px-4 py-2 text-white hover:bg-red-700"
+                            >
+                              ✕ Absent
+                            </button>
+                          </div>
+
+                          {registration.attendance === "present" && (
+                            <div className="mt-5 border-t pt-4">
+                              <p className="font-medium">
+                                Certificate
+                              </p>
+
+                              <p className="mt-1 text-sm text-gray-600">
+                                This volunteer is eligible for a certificate.
+                              </p>
+
+                              <button
+                                onClick={() =>
+                                  generateCertificate(
+                                    registration._id
+                                  )
+                                }
+                                className="mt-3 rounded-lg bg-purple-600 px-4 py-2 text-white hover:bg-purple-700"
+                              >
+                                🎓 Generate Certificate
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      )}
                     </div>
                   ))}
-
                 </div>
               )}
-
             </div>
 
-          </div>
+          </section>
         )}
-
       </div>
-    </div>
+    </main>
   );
 }
 

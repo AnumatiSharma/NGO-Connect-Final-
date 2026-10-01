@@ -27,17 +27,13 @@ function Register() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    setError("");
     setLoading(true);
+    setError("");
 
     try {
       const data = await registerUser(formData);
-
-      // Save user + token
       login(data.user, data.token);
 
-      // After successful signup, go to Home
       navigate("/");
     } catch (err) {
       setError(err.message);
@@ -47,160 +43,76 @@ function Register() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 px-4 py-12">
+    <main className="min-h-screen bg-gray-50 px-4 py-12">
       <div className="mx-auto max-w-md">
+        <h1 className="text-3xl font-bold text-gray-900">Create Account </h1>
+        <p className="mt-2 text-gray-600">  Join NGO Connect and start volunteering.</p>
 
-        {/* Header */}
-        <div className="mb-8 text-center">
-          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-emerald-700 text-white shadow-md">
-            <svg
-              width="28"
-              height="28"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78L12 21.23l8.84-8.84a5.5 5.5 0 0 0 0-7.78z" />
-            </svg>
+        {error && (
+          <div className="mt-5 rounded-lg bg-red-50 p-4 text-red-600">  {error}</div>
+        )}
+
+        <form  onSubmit={handleSubmit}  className="mt-6 space-y-4 rounded-xl bg-white p-6 shadow-sm" >
+          <div>
+            <label className="text-sm font-medium"> Full Name </label>
+            <input  type="text"  name="name"  value={formData.name}  onChange={handleChange}  placeholder="Enter your name"  required  className="mt-1 w-full rounded-lg border px-3 py-2"  />
           </div>
 
-          <h1 className="mt-5 text-3xl font-bold text-emerald-950">
-            Create your account
-          </h1>
-
-          <p className="mt-2 text-gray-600">
-            Join NGO Connect and start making a difference.
-          </p>
-        </div>
-
-        <div className="rounded-2xl border bg-white p-7 shadow-sm sm:p-8">
-          {error && (
-            <div className="mb-5 rounded-xl border border-red-200 bg-red-50 p-4">
-              <p className="text-sm font-medium text-red-700">
-                {error}
-              </p>
-            </div>
-          )}
-
-          <form onSubmit={handleSubmit} className="space-y-5">
-            <div>
-              <label className="mb-2 block text-sm font-semibold text-gray-700">
-                Full Name
-              </label>
-
-              <input
-                type="text"
-                name="name"
-                placeholder="Enter your full name"
-                value={formData.name}
-                onChange={handleChange}
-                required
-                className="w-full rounded-xl border px-4 py-3"
-              />
-            </div>
-
-            <div>
-              <label className="mb-2 block text-sm font-semibold text-gray-700">
-                Email Address
-              </label>
-
-              <input
-                type="email"
-                name="email"
-                placeholder="Enter your email"
-                value={formData.email}
-                onChange={handleChange}
-                required
-                className="w-full rounded-xl border px-4 py-3"
-              />
-            </div>
-
-            <div>
-              <label className="mb-2 block text-sm font-semibold text-gray-700">
-                Password
-              </label>
-
-              <input
-                type="password"
-                name="password"
-                placeholder="Create a password"
-                value={formData.password}
-                onChange={handleChange}
-                required
-                className="w-full rounded-xl border px-4 py-3"
-              />
-            </div>
-
-            <div>
-              <label className="mb-2 block text-sm font-semibold text-gray-700">
-                Phone Number
-              </label>
-
-              <input
-                type="tel"
-                name="phone"
-                placeholder="Enter your phone number"
-                value={formData.phone}
-                onChange={handleChange}
-                className="w-full rounded-xl border px-4 py-3"
-              />
-            </div>
-
-            <div>
-              <label className="mb-2 block text-sm font-semibold text-gray-700">
-                Account Type
-              </label>
-
-              <select
-                name="role"
-                value={formData.role}
-                onChange={handleChange}
-                className="w-full rounded-xl border px-4 py-3"
-              >
-                <option value="volunteer">
-                  Volunteer
-                </option>
-
-                <option value="coordinator">
-                  Coordinator
-                </option>
-              </select>
-            </div>
-
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full rounded-xl bg-emerald-700 px-5 py-3.5 font-semibold text-white shadow-sm transition hover:bg-emerald-800 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              {loading
-                ? "Creating account..."
-                : "Create Account"}
-            </button>
-
-          </form>
-
-  
-          <div className="mt-6 border-t pt-6 text-center">
-            <p className="text-sm text-gray-600">
-              Already have an account?
-            </p>
-
-            <button
-              type="button"
-              onClick={() => navigate("/login")}
-              className="mt-2 font-semibold text-emerald-700 hover:text-emerald-900"
-            >
-              Log in →
-            </button>
+          <div>
+            <label className="text-sm font-medium">  Email  </label>
+            <input  type="email"  name="email"  value={formData.email}  onChange={handleChange}  placeholder="Enter your email"  required  className="mt-1 w-full rounded-lg border px-3 py-2" />
           </div>
 
-        </div>
+          <div>
+            <label className="text-sm font-medium"> Password  </label>
 
+            <input type="password"  name="password" value={formData.password}  onChange={handleChange}  placeholder="Create a password"   required  className="mt-1 w-full rounded-lg border px-3 py-2" />
+          </div>
+
+          <div>
+            <label className="text-sm font-medium">   Phone </label>
+
+            <input type="tel" name="phone"
+              value={formData.phone}
+              onChange={handleChange}
+              placeholder="Enter your phone number"
+              className="mt-1 w-full rounded-lg border px-3 py-2"
+            />
+          </div>
+
+          <div>
+            <label className="text-sm font-medium">   Account Type </label>
+
+            <select
+              name="role"
+              value={formData.role}
+              onChange={handleChange}
+              className="mt-1 w-full rounded-lg border bg-white px-3 py-2"
+            >
+              <option value="volunteer">Volunteer</option>
+              <option value="coordinator">Coordinator</option>
+            </select>
+          </div>
+
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full rounded-lg bg-emerald-700 px-4 py-3 font-semibold text-white hover:bg-emerald-800 disabled:opacity-50"
+          >
+            {loading ? "Creating..." : "Create Account"}
+          </button>
+        </form>
+
+        <p className="mt-6 text-center text-sm text-gray-600">
+          Already have an account?{" "}
+          <button
+            onClick={() => navigate("/login")}
+            className="font-semibold text-emerald-700 hover:text-emerald-800"
+          > Login
+          </button>
+        </p>
       </div>
-    </div>
+    </main>
   );
 }
 

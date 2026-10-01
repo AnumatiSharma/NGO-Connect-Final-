@@ -1,11 +1,11 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+
 const API_URL = "http://localhost:5000/api";
 
 function Profile() {
   const { user, token, login } = useAuth();
-
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -27,9 +27,6 @@ function Profile() {
   };
 
   const handleEdit = () => {
-    setError("");
-    setSuccess("");
-
     setFormData({
       name: user?.name || "",
       phone: user?.phone || "",
@@ -38,57 +35,43 @@ function Profile() {
       interests: user?.interests || "",
     });
 
+    setError("");
+    setSuccess("");
     setEditing(true);
   };
 
   const handleCancel = () => {
+    setEditing(false);
     setError("");
     setSuccess("");
-
-    setFormData({
-      name: user?.name || "",
-      phone: user?.phone || "",
-      address: user?.address || "",
-      skills: user?.skills || "",
-      interests: user?.interests || "",
-    });
-
-    setEditing(false);
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    setSaving(true);
     setError("");
     setSuccess("");
-    setSaving(true);
 
     try {
-      const response = await fetch(
-        `${API_URL}/auth/profile`,
-        {
-          method: "PATCH",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify(formData),
-        }
-      );
+      const response = await fetch(`${API_URL}/auth/profile`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(formData),
+      });
 
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(
-          data.message || "Failed to update profile"
-        );
+        throw new Error(data.message || "Failed to update profile");
       }
 
-      // Update AuthContext + localStorage
       login(data.user, token);
-
-      setSuccess("Profile updated successfully.");
       setEditing(false);
+      setSuccess("Profile updated successfully.");
     } catch (err) {
       setError(err.message);
     } finally {
@@ -98,48 +81,38 @@ function Profile() {
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-[#f4faf7] px-6 py-12">
-        <div className="mx-auto max-w-5xl">
-          <div className="rounded-3xl border bg-white p-8 text-center">
-            <p className="text-slate-600">
-              Please log in to view your profile.
-            </p>
+      <main className="min-h-screen bg-gray-50 px-6 py-12">
+        <div className="mx-auto max-w-3xl rounded-xl bg-white p-8 text-center shadow-sm">
+          <p className="text-gray-600">
+            Please login to view your profile.
+          </p>
 
-            <Link
-              to="/login"
-              className="mt-5 inline-block rounded-xl bg-emerald-700 px-6 py-3 font-semibold text-white"
-            >
-              Login
-            </Link>
-          </div>
+          <Link
+            to="/login"
+            className="mt-5 inline-block rounded-lg bg-emerald-700 px-5 py-2 text-white hover:bg-emerald-800"
+          >
+            Login
+          </Link>
         </div>
-      </div>
+      </main>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#f4faf7] px-6 py-12">
-      <div className="mx-auto max-w-5xl">
+    <main className="min-h-screen bg-gray-50 px-6 py-12">
+      <div className="mx-auto max-w-4xl">
+        <h1 className="text-3xl font-bold text-gray-900">
+          My Profile
+        </h1>
 
-        {/* Header */}
-        <div className="mb-8">
-          <p className="text-sm font-semibold uppercase tracking-wider text-emerald-700">
-            Volunteer Account
-          </p>
+        <p className="mt-2 text-gray-600">
+          Manage your personal and volunteer information.
+        </p>
 
-          <h1 className="mt-2 text-4xl font-bold tracking-tight text-emerald-950">
-            My Profile
-          </h1>
-
-          <p className="mt-3 text-lg text-slate-600">
-            Manage your personal and volunteer information.
-          </p>
-        </div>
-
-        <div className="overflow-hidden rounded-3xl border border-emerald-900/10 bg-white shadow-[0_10px_40px_rgba(6,45,36,0.06)]">
-          <div className="bg-gradient-to-br from-emerald-900 to-emerald-800 px-8 py-10 text-white">
-            <div className="flex flex-col gap-5 sm:flex-row sm:items-center">
-              <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-2xl bg-white text-3xl font-bold text-emerald-800 shadow-lg">
+        <div className="mt-8 overflow-hidden rounded-xl bg-white shadow-sm">
+          <div className="bg-emerald-800 p-6 text-white">
+            <div className="flex items-center gap-4">
+              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-white text-2xl font-bold text-emerald-800">
                 {user.name?.charAt(0)?.toUpperCase() || "V"}
               </div>
 
@@ -148,46 +121,39 @@ function Profile() {
                   {user.name}
                 </h2>
 
-                <p className="mt-1 text-emerald-100">
+                <p className="text-emerald-100">
                   {user.email}
                 </p>
 
-                <span className="mt-3 inline-block rounded-full bg-emerald-700 px-3 py-1 text-xs font-semibold capitalize text-emerald-50">
+                <p className="mt-1 capitalize text-emerald-200">
                   {user.role}
-                </span>
+                </p>
               </div>
             </div>
           </div>
 
-          <div className="p-8">
+          <div className="p-6">
             {error && (
-              <div className="mb-6 rounded-xl border border-red-200 bg-red-50 px-5 py-4 text-sm font-medium text-red-700">
+              <div className="mb-5 rounded-lg bg-red-50 p-4 text-red-700">
                 {error}
               </div>
             )}
 
             {success && (
-              <div className="mb-6 rounded-xl border border-emerald-200 bg-emerald-50 px-5 py-4 text-sm font-medium text-emerald-700">
+              <div className="mb-5 rounded-lg bg-green-50 p-4 text-green-700">
                 {success}
               </div>
             )}
 
-            <div className="mb-7 flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
-              <div>
-                <p className="text-sm font-semibold uppercase tracking-wider text-emerald-700">
-                  Account Information
-                </p>
-
-                <h3 className="mt-1 text-2xl font-bold text-emerald-950">
-                  Your Details
-                </h3>
-              </div>
+            <div className="flex items-center justify-between">
+              <h2 className="text-2xl font-bold text-gray-900">
+                Account Information
+              </h2>
 
               {!editing && (
                 <button
-                  type="button"
                   onClick={handleEdit}
-                  className="rounded-xl bg-emerald-700 px-6 py-3 text-sm font-semibold text-white transition hover:bg-emerald-800"
+                  className="rounded-lg bg-emerald-700 px-4 py-2 text-white hover:bg-emerald-800"
                 >
                   Edit Profile
                 </button>
@@ -195,253 +161,162 @@ function Profile() {
             </div>
 
             {editing ? (
-              <form
-                onSubmit={handleSubmit}
-                className="space-y-6"
-              >
+              <form onSubmit={handleSubmit} className="mt-6 space-y-5">
                 <div>
-                  <label className="mb-2 block text-sm font-semibold text-slate-700">
-                    Full Name
-                  </label>
-
+                  <label className="font-medium">Full Name</label>
                   <input
                     type="text"
                     name="name"
                     value={formData.name}
                     onChange={handleChange}
                     required
-                    className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 outline-none transition focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100"
-                    placeholder="Enter your full name"
+                    className="mt-1 w-full rounded-lg border px-3 py-2"
                   />
                 </div>
 
                 <div>
-                  <label className="mb-2 block text-sm font-semibold text-slate-700">
-                    Email Address
-                  </label>
-
+                  <label className="font-medium">Email</label>
                   <input
                     type="email"
                     value={user.email}
                     disabled
-                    className="w-full cursor-not-allowed rounded-xl border border-slate-200 bg-slate-100 px-4 py-3 text-slate-500"
+                    className="mt-1 w-full rounded-lg border bg-gray-100 px-3 py-2"
                   />
-
-                  <p className="mt-2 text-xs text-slate-500">
-                    Email cannot be changed from your profile.
+                  <p className="mt-1 text-sm text-gray-500">
+                    Email cannot be changed.
                   </p>
                 </div>
 
                 <div>
-                  <label className="mb-2 block text-sm font-semibold text-slate-700">
-                    Phone Number
-                  </label>
-
+                  <label className="font-medium">Phone</label>
                   <input
                     type="tel"
                     name="phone"
                     value={formData.phone}
                     onChange={handleChange}
-                    className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 outline-none transition focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100"
-                    placeholder="Enter your phone number"
+                    className="mt-1 w-full rounded-lg border px-3 py-2"
                   />
                 </div>
 
                 <div>
-                  <label className="mb-2 block text-sm font-semibold text-slate-700">
-                    Address
-                  </label>
-
+                  <label className="font-medium">Address</label>
                   <textarea
                     name="address"
                     value={formData.address}
                     onChange={handleChange}
                     rows="3"
-                    className="w-full resize-none rounded-xl border border-slate-300 bg-white px-4 py-3 outline-none transition focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100"
-                    placeholder="Enter your address"
+                    className="mt-1 w-full rounded-lg border px-3 py-2"
                   />
                 </div>
 
                 <div>
-                  <label className="mb-2 block text-sm font-semibold text-slate-700">
-                    Skills
-                  </label>
-
+                  <label className="font-medium">Skills</label>
                   <input
                     type="text"
                     name="skills"
                     value={formData.skills}
                     onChange={handleChange}
-                    className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 outline-none transition focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100"
-                    placeholder="Example: Event management, First aid, Teaching"
+                    placeholder="Example: Teaching, First Aid"
+                    className="mt-1 w-full rounded-lg border px-3 py-2"
                   />
                 </div>
-                <div>
-                  <label className="mb-2 block text-sm font-semibold text-slate-700">
-                    Interests
-                  </label>
 
+                <div>
+                  <label className="font-medium">Interests</label>
                   <input
                     type="text"
                     name="interests"
                     value={formData.interests}
                     onChange={handleChange}
-                    className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 outline-none transition focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100"
-                    placeholder="Example: Education, Healthcare, Environment"
+                    placeholder="Example: Education, Environment"
+                    className="mt-1 w-full rounded-lg border px-3 py-2"
                   />
                 </div>
 
-                <div className="flex flex-col gap-3 border-t border-slate-200 pt-6 sm:flex-row">
+                <div className="flex gap-3 pt-3">
                   <button
                     type="submit"
                     disabled={saving}
-                    className="rounded-xl bg-emerald-700 px-7 py-3 font-semibold text-white transition hover:bg-emerald-800 disabled:cursor-not-allowed disabled:opacity-60"
+                    className="rounded-lg bg-emerald-700 px-5 py-2 text-white hover:bg-emerald-800 disabled:opacity-50"
                   >
-                    {saving
-                      ? "Saving Changes..."
-                      : "Save Changes"}
+                    {saving ? "Saving..." : "Save Changes"}
                   </button>
 
                   <button
                     type="button"
                     onClick={handleCancel}
                     disabled={saving}
-                    className="rounded-xl border border-slate-300 bg-white px-7 py-3 font-semibold text-slate-700 transition hover:bg-slate-50 disabled:opacity-60"
+                    className="rounded-lg border px-5 py-2 hover:bg-gray-50"
                   >
                     Cancel
                   </button>
-
                 </div>
-
               </form>
             ) : (
-
-              <div className="grid gap-5 md:grid-cols-2">
-                <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5">
-                  <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">
-                    Full Name
-                  </p>
-
-                  <p className="mt-2 text-lg font-semibold text-slate-900">
+              <div className="mt-6 grid gap-4 sm:grid-cols-2">
+                <div className="rounded-lg bg-gray-50 p-4">
+                  <p className="text-sm text-gray-500">Full Name</p>
+                  <p className="mt-1 font-semibold">
                     {user.name || "Not provided"}
                   </p>
                 </div>
 
-
-                
-                <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5">
-                  <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">
-                    Email Address
-                  </p>
-
-                  <p className="mt-2 break-all text-lg font-semibold text-slate-900">
+                <div className="rounded-lg bg-gray-50 p-4">
+                  <p className="text-sm text-gray-500">Email</p>
+                  <p className="mt-1 break-all font-semibold">
                     {user.email || "Not provided"}
                   </p>
                 </div>
-              
-                <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5">
-                  <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">
-                    Phone
-                  </p>
 
-                  <p className="mt-2 text-lg font-semibold text-slate-900">
+                <div className="rounded-lg bg-gray-50 p-4">
+                  <p className="text-sm text-gray-500">Phone</p>
+                  <p className="mt-1 font-semibold">
                     {user.phone || "Not provided"}
                   </p>
                 </div>
 
-
-            
-                <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5">
-                  <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">
-                    Address
-                  </p>
-
-                  <p className="mt-2 text-lg font-semibold text-slate-900">
+                <div className="rounded-lg bg-gray-50 p-4">
+                  <p className="text-sm text-gray-500">Address</p>
+                  <p className="mt-1 font-semibold">
                     {user.address || "Not provided"}
                   </p>
                 </div>
 
-
-            
-                <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5">
-                  <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">
-                    Skills
-                  </p>
-
-                  <p className="mt-2 text-lg font-semibold text-slate-900">
+                <div className="rounded-lg bg-gray-50 p-4">
+                  <p className="text-sm text-gray-500">Skills</p>
+                  <p className="mt-1 font-semibold">
                     {user.skills || "Not provided"}
                   </p>
                 </div>
 
-
-          
-                <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5">
-                  <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">
-                    Interests
-                  </p>
-
-                  <p className="mt-2 text-lg font-semibold text-slate-900">
+                <div className="rounded-lg bg-gray-50 p-4">
+                  <p className="text-sm text-gray-500">Interests</p>
+                  <p className="mt-1 font-semibold">
                     {user.interests || "Not provided"}
                   </p>
                 </div>
-
               </div>
             )}
 
-
-      
-            {!editing && (
-              <div className="mt-8 rounded-2xl border border-emerald-100 bg-emerald-50 p-6">
-
-                <div className="flex items-start gap-4">
-
-                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-emerald-100 text-xl">
-                    🤝
-                  </div>
-
-                  <div>
-                    <h3 className="font-bold text-emerald-950">
-                      Volunteer Account
-                    </h3>
-
-                    <p className="mt-1 text-sm leading-6 text-emerald-800">
-                      Keep your profile information up to date so
-                      coordinators can better understand your
-                      volunteering skills and interests.
-                    </p>
-                  </div>
-
-                </div>
-
-              </div>
-            )}
-
-
-    
-            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-
+            <div className="mt-8 flex gap-3">
               <Link
                 to="/dashboard"
-                className="rounded-xl bg-emerald-700 px-6 py-3 text-center text-sm font-semibold text-white transition hover:bg-emerald-800"
+                className="rounded-lg bg-emerald-700 px-5 py-2 text-white hover:bg-emerald-800"
               >
-                ← Back to Dashboard
+                ← Dashboard
               </Link>
 
               <Link
                 to="/my-registrations"
-                className="rounded-xl border border-emerald-200 bg-white px-6 py-3 text-center text-sm font-semibold text-emerald-700 transition hover:bg-emerald-50"
+                className="rounded-lg border px-5 py-2 text-emerald-700 hover:bg-gray-50"
               >
                 My Registrations
               </Link>
-
             </div>
-
           </div>
-
         </div>
-
       </div>
-    </div>
+    </main>
   );
 }
 

@@ -24,22 +24,17 @@ function Login() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    setError("");
     setLoading(true);
+    setError("");
 
     try {
       const data = await loginUser(formData);
-
-console.log("LOGIN RESPONSE:", data);
-
-login(data.user, data.token);
-
-if (data.user.role === "coordinator") {
-  navigate("/coordinator/dashboard");
-} else {
-  navigate("/dashboard");
-}
+      login(data.user, data.token);
+      if (data.user.role === "coordinator") {
+        navigate("/coordinator/dashboard");
+      } else {
+        navigate("/dashboard");
+      }
     } catch (err) {
       setError(err.message);
     } finally {
@@ -48,69 +43,47 @@ if (data.user.role === "coordinator") {
   };
 
   return (
-    <div className="mx-auto max-w-md px-4 py-12">
-      <h1 className="mb-6 text-3xl font-bold">Login</h1>
+    <main className="min-h-screen bg-gray-50 px-4 py-12">
+      <div className="mx-auto max-w-md rounded-xl bg-white p-6 shadow-sm">
+        <h1 className="text-3xl font-bold text-gray-900"> Login </h1>
 
-      {error && (
-        <div className="mb-4 rounded-md bg-red-100 p-3 text-red-700">
-          {error}
-        </div>
-      )}
+        <p className="mt-2 text-gray-600"> Login to your NGO Connect account </p>
 
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
-          <label className="mb-1 block font-medium">
-            Email
-          </label>
+        {error && (
+          <div className="mt-5 rounded-lg bg-red-50 p-3 text-red-600">
+            {error}
+          </div>
+        )}
 
-          <input
-            type="email"
-            name="email"
-            value={formData.email}
-            onChange={handleChange}
-            placeholder="Enter your email"
-            required
-            className="w-full rounded-md border p-3"
-          />
-        </div>
+        <form onSubmit={handleSubmit} className="mt-6 space-y-4">
+          <div>
+            <label className="text-sm font-medium">Email</label>
 
-        <div>
-          <label className="mb-1 block font-medium">
-            Password
-          </label>
+            <input type="email" name="email" value={formData.email} onChange={handleChange} placeholder="Enter your email" required
+              className="mt-1 w-full rounded-lg border px-3 py-2"
+            />
+          </div>
 
-          <input
-            type="password"
-            name="password"
-            value={formData.password}
-            onChange={handleChange}
-            placeholder="Enter your password"
-            required
-            className="w-full rounded-md border p-3"
-          />
-        </div>
+          <div>
+            <label className="text-sm font-medium">Password</label>
 
-        <button
-          type="submit"
-          disabled={loading}
-          className="w-full rounded-md bg-blue-600 p-3 font-semibold text-white"
-        >
-          {loading ? "Logging in..." : "Login"}
-        </button>
-      </form>
+            <input type="password"  name="password"  value={formData.password}  onChange={handleChange}  placeholder="Enter your password"  required
+              className="mt-1 w-full rounded-lg border px-3 py-2"  />
+          </div>
 
-      <p className="mt-6 text-center">
-        Don't have an account?{" "}
-        <button
-          type="button"
-          onClick={() => navigate("/register")}
-          className="font-semibold text-blue-600"
-        >
-          Register
-        </button>
-      </p>
-    </div>
+          <button type="submit"  disabled={loading}  className="w-full rounded-lg bg-emerald-700 px-4 py-3 font-semibold text-white hover:bg-emerald-800 disabled:opacity-50"  >
+            {loading ? "Logging in..." : "Login"}
+          </button>
+        </form>
+
+        <p className="mt-6 text-center text-sm text-gray-600">
+          Don't have an account?{" "}
+          <button  type="button"  onClick={() => navigate("/register")}  className="font-semibold text-emerald-700 hover:text-emerald-800">
+            Register
+          </button>
+        </p>
+      </div>
+    </main>
   );
 }
-
 export default Login;
