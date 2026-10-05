@@ -1,4 +1,4 @@
-const API_URL = "http://localhost:5000/api";
+const API_URL = "https://ngo-connect-backend.vercel.app/api";
 
 export async function registerUser(userData) {
   const response = await fetch(`${API_URL}/auth/register`, {

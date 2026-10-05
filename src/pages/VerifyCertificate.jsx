@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-const API_URL = "http://localhost:5000/api";
+const API_URL = "https://ngo-connect-backend.vercel.app/api";
 
 function VerifyCertificate() {
   const [certificateId, setCertificateId] = useState("");

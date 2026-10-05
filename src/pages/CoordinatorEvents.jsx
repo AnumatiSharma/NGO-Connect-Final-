@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
-const API_URL = "http://localhost:5000/api";
+const API_URL = "https://ngo-connect-backend.vercel.app/api";
 
 function CoordinatorEvents() {
   const { eventId } = useParams();
