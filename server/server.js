@@ -16,7 +16,15 @@ const PORT = process.env.PORT || 5000;
 
 connectDB();
 
-app.use(cors());
+app.use(
+  cors({
+    origin: "https://ngo-connect-snowy.vercel.app",
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+  })
+);
+
+app.options(/.*/, cors());
 app.use(express.json());
 app.use("/api/events", eventRoutes);
 app.use("/api/registrations", registrationRoutes);
